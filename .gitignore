@@ -1,0 +1,23 @@
+# نادیده گرفتن node_modules برای همه سرویس‌ها
+**/node_modules/
+
+# فایل‌های محیط توسعه
+**/.env
+
+# پوشه‌های تولید
+**/dist/
+**/build/
+
+# فایل‌های لاگ
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# فایل‌های IDE
+.vscode/
+.idea/
+
+# کش‌های سیستم‌عامل
+.DS_Store
+Thumbs.db

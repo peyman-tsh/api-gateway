@@ -1,0 +1,31 @@
+{
+  "name": "api-gateway",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "nest build",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node dist/main"
+  },
+  "dependencies": {
+    "@nestjs/cache-manager": "^3.0.1",
+    "@nestjs/common": "^11.1.0",
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/core": "^11.1.0",
+    "@nestjs/jwt": "^11.0.0",
+    "@nestjs/microservices": "^11.1.0",
+    "@nestjs/passport": "^11.0.5",
+    "@nestjs/platform-express": "^11.1.0",
+    "@nestjs/swagger": "^11.1.5",
+    "@nestjs/terminus": "^11.0.0",
+    "@nestjs/throttler": "^6.4.0",
+    "class-validator": "^0.14.1",
+    "ioredis": "^5.6.1",
+    "opossum": "^8.4.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/opossum": "^8.1.8"
+  }
+}
