@@ -1,7 +1,6 @@
-import { Injectable, ExecutionContext } from '@nestjs/common';
-import { ThrottlerGuard, ThrottlerException, ThrottlerStorage } from '@nestjs/throttler';
-import { RedisService } from '../redis/redis.service';
-import { Reflector } from '@nestjs/core';
+import { Injectable } from '@nestjs/common';
+import { ThrottlerStorage } from '@nestjs/throttler';
+import { Redis } from 'ioredis';
 
 interface ThrottlerStorageRecord {
   totalHits: number;
@@ -12,45 +11,46 @@ interface ThrottlerStorageRecord {
 }
 
 @Injectable()
-export class RedisThrottlerGuard extends ThrottlerGuard {
-  constructor(
-    private readonly redisService: RedisService,
-    protected readonly reflector: Reflector
-  ) {
-    const storage: ThrottlerStorage = {
-      async increment(
-        key: string, 
-        ttl: number, 
-        limit: number,
-        blockDuration: number,
-        throttlerName: string
-      ): Promise<ThrottlerStorageRecord> {
-        const count = await redisService.incr(key);
-        if (count === 1) {
-          await redisService.expire(key, ttl);
-        }
+export class RedisThrottlerStorage implements ThrottlerStorage {
+  private readonly redisClient: Redis;
 
-        const isBlocked = count > limit;
-        return {
-          totalHits: count,
-          timeToExpire: ttl,
-          timestamp: Date.now(),
-          isBlocked,
-          timeToBlockExpire: isBlocked ? blockDuration : 0
-        };
-      }
-    };
-
-    super(
-      { throttlers: [{ ttl: 60, limit: 10 }] },
-      storage,
-      reflector
-    );
+  constructor() {
+    this.redisClient = new Redis({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT || '6379'),
+    });
   }
 
-  protected async getTracker(req: any): Promise<string> {
-    const ip = req.headers['x-forwarded-for'] || req.ip;
-    const userAgent = req.headers['user-agent'] || 'unknown';
-    return `throttler:${ip}:${userAgent}`;
+  async getRecord(key: string): Promise<number[]> {
+    const record = await this.redisClient.get(key);
+    return record ? JSON.parse(record) : [];
+  }
+
+  async addRecord(key: string, ttl: number): Promise<void> {
+    const record = await this.getRecord(key);
+    record.push(Date.now());
+    await this.redisClient.set(key, JSON.stringify(record), 'EX', ttl);
+  }
+
+  async increment(
+    key: string,
+    ttl: number,
+    limit: number,
+    blockDuration: number,
+    throttlerName: string
+  ): Promise<ThrottlerStorageRecord> {
+    const count = await this.redisClient.incr(key);
+    if (count === 1) {
+      await this.redisClient.expire(key, ttl);
+    }
+
+    const isBlocked = count > limit;
+    return {
+      totalHits: count,
+      timeToExpire: ttl,
+      timestamp: Date.now(),
+      isBlocked,
+      timeToBlockExpire: isBlocked ? blockDuration : 0
+    };
   }
 }

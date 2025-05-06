@@ -1,20 +1,47 @@
 import * as CircuitBreaker from 'opossum';
+import { Options } from 'opossum';
 
-export const circuitBreakerOptions = {
-  timeout: 3000,
-  errorThresholdPercentage: 50,
-  resetTimeout: 30000,
+
+export const breakerOptions = {
+  timeout: 3000, // Timeout in milliseconds
+  errorThresholdPercentage: 50, // Error threshold to open the circuit
+  resetTimeout: 5000, // Time to wait before attempting a reset
 };
 
-export function UseCircuitBreaker() {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+export function UseCircuitBreaker(options: Options = {}) {
+  return function (
+    target: Record<string, any>,
+    propertyKey: string,
+    descriptor: PropertyDescriptor,
+  ) {
     const originalMethod = descriptor.value;
-    const breaker = new CircuitBreaker(originalMethod, circuitBreakerOptions);
 
+    // Replace the method with a circuit breaker wrapper
     descriptor.value = async function (...args: any[]) {
-      return await breaker.fire(...args);
+      const circuitBreaker = new CircuitBreaker(
+        // Use Reflect.apply to correctly bind `this` to the method
+       async (...methodArgs) => Reflect.apply(originalMethod, this, methodArgs),
+        options,
+      );
+
+      // Provide a fallback
+      circuitBreaker.fallback(() => ({
+        status: 'error',
+        message: 'Service temporarily unavailable. Please try again later.',
+      }));
+
+      try {
+        // Execute the circuit breaker
+        return await circuitBreaker.fire(...args);
+      } catch (error) {
+        console.error(
+          `Circuit breaker error for ${propertyKey}:`,
+          error.message,
+        );
+        throw error;
+      }
     };
 
     return descriptor;
   };
-} 
+}

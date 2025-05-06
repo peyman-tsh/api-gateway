@@ -1,59 +1,50 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-import { ThrottlerModule } from '@nestjs/throttler';
-import { AuthModule } from './auth/auth.module';
-import { UserModule } from './user/user.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { LoggingInterceptor } from './interceptors/logging.interceptor';
-import { RedisThrottlerGuard } from './common/guards/redis-throttler.guard';
+import { JwtModule } from '@nestjs/jwt';
+import { AuthModule } from './auth/auth.module';
+import { UserModule } from './user/user.module';
+import { RedisThrottlerStorage } from './common/guards/redis-throttler.guard';
+import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 
 @Module({
   imports: [
+
+    JwtModule,
     ConfigModule.forRoot({ isGlobal: true }),
-    ThrottlerModule.forRoot([{
-      ttl: 60,
-      limit: 100,
-    }]),
-    ClientsModule.registerAsync([
-      {
-        name: 'AUTH_SERVICE',
-        useFactory: () => ({
-          transport: Transport.TCP,
-          options: {
-            host: process.env.AUTH_SERVICE_HOST ?? 'localhost',
-            port: parseInt(process.env.AUTH_SERVICE_PORT ?? '3001'),
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        throttlers: [
+          {
+            ttl: config.get('THROTTLE_TTL') || 60,
+            limit: config.get('THROTTLE_LIMIT') || 10,
           },
-        }),
-      },
-      {
-        name: 'USER_SERVICE',
-        useFactory: () => ({
-          transport: Transport.TCP,
-          options: {
-            host: process.env.USER_SERVICE_HOST ?? 'localhost',
-            port: parseInt(process.env.USER_SERVICE_PORT ?? '3002'),
-          },
-        }),
-      },
-    ]),
+        ],
+        storage: new ThrottlerStorageRedisService(),
+      }),
+    }),
     AuthModule,
-    UserModule,
+    UserModule
   ],
   providers: [
     {
       provide: APP_GUARD,
-      useClass: JwtAuthGuard,
+      useClass: JwtAuthGuard, // استفاده از JwtAuthGuard به عنوان APP_GUARD
     },
     {
       provide: APP_INTERCEPTOR,
-      useClass: LoggingInterceptor,
+      useClass: LoggingInterceptor, // استفاده از LoggingInterceptor به عنوان APP_INTERCEPTOR
     },
     {
       provide: APP_GUARD,
-      useClass: RedisThrottlerGuard,
+      useClass: ThrottlerGuard, // فعال‌سازی محدودیت سرعت
     },
+    RedisThrottlerStorage
   ],
 })
-export class AppModule {} 
+export class AppModule {}

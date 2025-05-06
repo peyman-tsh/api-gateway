@@ -3,15 +3,20 @@ import { UserController } from './user.controller';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
-  imports: [
+  imports: [   
     ClientsModule.register([
-      {
-        name: 'USER_SERVICE',
-        transport: Transport.TCP,
-        options: { port: 3002 },
+    {
+      name: 'USER_SERVICE',
+      transport: Transport.RMQ,
+      options: {
+        urls: ['amqp://localhost:5672'],
+        queue: 'user_queue',
+        queueOptions: {
+          durable: false
+        },
       },
-    ]),
-  ],
+    },
+  ]),],
   controllers: [UserController],
 })
 export class UserModule {} 
