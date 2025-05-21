@@ -14,17 +14,13 @@ export class AuthService {
 
   async login(loginDto: LoginDto) {
     const user = await firstValueFrom(
-      this.authClient.send({ cmd: 'authenticate' }, loginDto)
+      this.authClient.send({ cmd: 'login' }, loginDto)
     );
 
     if (user) {
       console.log(user);
-      
-      const payload = { sub: user.id, email: user.email };
-      return {
-        access_token: this.jwtService.sign(payload),
-        user
-      };
+    
+     return user
     }
 
     return null;
