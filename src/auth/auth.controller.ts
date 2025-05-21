@@ -1,4 +1,5 @@
 import { Body, Controller, Inject, Post, HttpException } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ClientProxy } from '@nestjs/microservices';
 import { Public } from './decorators/public.decorator';
 import { LoginDto } from './dto/login.dto';
@@ -14,6 +15,7 @@ export class AuthController {
   ) {}
 
   @Public()
+  @Throttle({default:{limit:10,ttl:60}})
   @Post('login')
   @UseCircuitBreaker()
   async login(@Body() loginDto: LoginDto) {        
@@ -28,6 +30,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({default:{limit:10,ttl:60}})
   @Post('/register')
   @UseCircuitBreaker()
   async register(@Body() registerDto:RegsiterDto){

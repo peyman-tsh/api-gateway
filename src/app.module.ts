@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { LoggingInterceptor } from './interceptors/logging.interceptor';
 import { JwtModule } from '@nestjs/jwt';
@@ -9,6 +9,8 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { RedisThrottlerStorage } from './common/guards/redis-throttler.guard';
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
+import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
+import { ResponseTransformer } from './common/transformers/response.transformer';
 
 @Module({
   imports: [
@@ -44,7 +46,12 @@ import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis'
       provide: APP_GUARD,
       useClass: ThrottlerGuard, // فعال‌سازی محدودیت سرعت
     },
-    RedisThrottlerStorage
+    {
+      provide:APP_FILTER,
+      useClass:GlobalExceptionFilter
+    },
+    RedisThrottlerStorage,
+    ResponseTransformer
   ],
 })
 export class AppModule {}
