@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, HttpException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
@@ -18,6 +18,8 @@ export class AuthService {
     );
 
     if (user) {
+      console.log(user);
+      
       const payload = { sub: user.id, email: user.email };
       return {
         access_token: this.jwtService.sign(payload),
@@ -37,10 +39,14 @@ export class AuthService {
   }
 
   async register(registerDto: RegsiterDto) {
+    try{
     const registeredUser = await firstValueFrom(
       this.authClient.send({ cmd: 'register' }, registerDto)
     );
     return registeredUser;
+  }catch(err){
+    throw new HttpException(err.message,500)
   }
+}
 
 } 
