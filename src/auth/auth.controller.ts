@@ -1,4 +1,4 @@
-import { Body, Controller, Inject, Post, HttpException, HttpStatus, Res } from '@nestjs/common';
+import { Body, Controller, Inject, Post, HttpException, HttpStatus, Res, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ClientProxy } from '@nestjs/microservices';
 import { Public } from './decorators/public.decorator';
@@ -8,6 +8,7 @@ import { AuthService } from './auth.service';
 import { RegsiterDto } from './dto/register.dto';
 import { ApiBody, ApiResponse } from '@nestjs/swagger';
 import { response, Response } from 'express';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -16,8 +17,9 @@ export class AuthController {
     private readonly authService: AuthService
   ) {}
 
+
   @Public()
-  @Throttle({default:{limit:10,ttl:60}})
+  @UseGuards(JwtAuthGuard)
   @Post('login')
   @ApiResponse({ status: 200, description: 'login succsesfuly.'})
   @ApiResponse({ status: 401, description: 'login not sucsses.'})
@@ -39,7 +41,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle({default:{limit:10,ttl:60}})
+  @UseGuards(JwtAuthGuard)
   @Post('/register')
   @ApiResponse({ status: 200, description: 'register succsesfuly.'})
   @ApiResponse({ status: 400, description: 'bad request.'})

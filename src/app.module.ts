@@ -23,7 +23,7 @@ import { ResponseTransformer } from './common/transformers/response.transformer'
       useFactory: (config: ConfigService) => ({
         throttlers: [
           {
-            ttl: config.get('THROTTLE_TTL') || 60,
+            ttl: config.get('THROTTLE_TTL') || 6000,
             limit: config.get('THROTTLE_LIMIT') || 10,
           },
         ],
@@ -34,10 +34,6 @@ import { ResponseTransformer } from './common/transformers/response.transformer'
     UserModule
   ],
   providers: [
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard, // استفاده از JwtAuthGuard به عنوان APP_GUARD
-    },
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor, // استفاده از LoggingInterceptor به عنوان APP_INTERCEPTOR

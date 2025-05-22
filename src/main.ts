@@ -1,10 +1,8 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { VersioningType } from '@nestjs/common';
 import { AppModule } from './app.module';
-import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
-import { ResponseTransformer } from './common/transformers/response.transformer';
+;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

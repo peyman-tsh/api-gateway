@@ -7,6 +7,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   constructor(private readonly responseTransformer: ResponseTransformer) {}
 
   catch(exception: Error, host: ArgumentsHost) {
+
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
