@@ -22,7 +22,7 @@ export class AuthService {
     
      return user
     }
-
+    
     return null;
   }
 
@@ -44,5 +44,4 @@ export class AuthService {
     throw new HttpException(err.message,500)
   }
 }
-
 } 

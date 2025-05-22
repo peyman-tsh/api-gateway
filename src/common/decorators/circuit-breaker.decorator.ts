@@ -26,7 +26,7 @@ export function UseCircuitBreaker(options: Options = {}) {
 
       // Provide a fallback
       circuitBreaker.fallback(() => ({
-        status: 'error',
+        status: 500,
         message: 'Service temporarily unavailable. Please try again later.',
       }));
 

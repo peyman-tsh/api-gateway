@@ -1,4 +1,4 @@
-import { Body, Controller, Inject, Post, HttpException } from '@nestjs/common';
+import { Body, Controller, Inject, Post, HttpException, HttpStatus, Res } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ClientProxy } from '@nestjs/microservices';
 import { Public } from './decorators/public.decorator';
@@ -6,6 +6,8 @@ import { LoginDto } from './dto/login.dto';
 import { UseCircuitBreaker } from '../common/decorators/circuit-breaker.decorator';
 import { AuthService } from './auth.service';
 import { RegsiterDto } from './dto/register.dto';
+import { ApiBody, ApiResponse } from '@nestjs/swagger';
+import { response, Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -17,11 +19,18 @@ export class AuthController {
   @Public()
   @Throttle({default:{limit:10,ttl:60}})
   @Post('login')
+  @ApiResponse({ status: 200, description: 'login succsesfuly.'})
+  @ApiResponse({ status: 401, description: 'login not sucsses.'})
+  @ApiResponse({ status: 500, description: 'Service temporarily unavailable. Please try again later.'})
+  @ApiBody({
+     type: LoginDto,
+     description: 'Json structure for user object',
+  })
   @UseCircuitBreaker()
-  async login(@Body() loginDto: LoginDto) {        
+  async login(@Body() loginDto: LoginDto,@Res() res:Response) {        
     try {
       const response = await this.authService.login(loginDto);
-      return response;
+      res.status(response.status).json(response.message)
     } catch (error) {
       console.log(error);
       
@@ -32,6 +41,13 @@ export class AuthController {
   @Public()
   @Throttle({default:{limit:10,ttl:60}})
   @Post('/register')
+  @ApiResponse({ status: 200, description: 'register succsesfuly.'})
+  @ApiResponse({ status: 400, description: 'bad request.'})
+  @ApiResponse({ status: 500, description: 'Service temporarily unavailable. Please try again later.'})
+  @ApiBody({
+     type: LoginDto,
+     description: 'Json structure for user object',
+  })
   @UseCircuitBreaker()
   async register(@Body() registerDto:RegsiterDto){
    try{
@@ -41,4 +57,5 @@ export class AuthController {
      throw new HttpException(error.message,error.status||500)
    }
   }
+
 }
