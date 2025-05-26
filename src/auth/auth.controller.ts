@@ -9,6 +9,7 @@ import { RegsiterDto } from './dto/register.dto';
 import { ApiBody, ApiResponse } from '@nestjs/swagger';
 import { response, Response } from 'express';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { IAuthRes } from 'src/interfaces/IAuthRes';
 
 @Controller('auth')
 export class AuthController {
@@ -51,12 +52,12 @@ export class AuthController {
      description: 'Json structure for user object',
   })
   @UseCircuitBreaker()
-  async register(@Body() registerDto:RegsiterDto){
+  async register(@Body() registerDto:RegsiterDto,@Res() res:Response){
    try{
      const register =await this.authService.register(registerDto);
-     return register;
+     res.status(register.status).json(register.message)
    }catch(error){
-     throw new HttpException(error.message,error.status||500)
+    throw new HttpException(error.message, error.status || 500);
    }
   }
 

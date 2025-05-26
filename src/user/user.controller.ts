@@ -5,12 +5,13 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UseCircuitBreaker } from '../common/decorators/circuit-breaker.decorator';
 import { Response } from 'express';
+import { UserService } from './user.service';
 
 @ApiTags('users')
 @Controller('users')
 export class UserController {
   constructor(
-    @Inject('USER_SERVICE') private readonly userClient: ClientProxy
+    private readonly userService:UserService
   ) {}
 
   @Post('adduser')
@@ -19,13 +20,8 @@ export class UserController {
   @ApiResponse({ status: 400, description: 'Bad request.' })
   @UseCircuitBreaker()
   async createUser(@Body() createUserDto: CreateUserDto,@Res() response:Response) {
-    const result= await firstValueFrom(
-       this.userClient.send({ cmd: 'createUser' }, createUserDto)
-    );
-    if(result.error){
-      response.status(result.error.status).json(result.error.message)
-    }
-    response.status(result.status).json(result.message)
+   const result =await this.userService.createUser(createUserDto);
+   response.status(result.status).json(result.message);
   }
 
   @Get(':id')
@@ -34,9 +30,8 @@ export class UserController {
   @ApiOperation({ summary: 'Get user by ID' })
   @ApiResponse({ status: 200, description: 'User found.' })
   @ApiResponse({ status: 404, description: 'User not found.' })
-  async getUser(@Param('id') id: string) {
-    return firstValueFrom(
-      this.userClient.send({ cmd: 'get_user' }, { id })
-    );
+  async getUser(@Param('id') id: string,@Res() response:Response) {
+   const result=await this.userService.getUser(id);
+   response.status(result.status).json(result.message);
   }
 }

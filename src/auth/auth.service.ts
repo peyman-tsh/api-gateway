@@ -1,9 +1,10 @@
-import { Injectable, Inject, HttpException } from '@nestjs/common';
+import { Injectable, Inject, HttpException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { LoginDto } from './dto/login.dto';
 import { RegsiterDto } from './dto/register.dto';
+import { IAuthRes } from 'src/interfaces/IAuthRes';
 
 @Injectable()
 export class AuthService {
@@ -12,18 +13,18 @@ export class AuthService {
     private readonly jwtService: JwtService
   ) {}
 
-  async login(loginDto: LoginDto) {
-    const user = await firstValueFrom(
+  async login(loginDto: LoginDto):Promise<IAuthRes> {
+    const authRes:IAuthRes = await firstValueFrom(
       this.authClient.send({ cmd: 'login' }, loginDto)
     );
 
-    if (user) {
-      console.log(user);
+    if (authRes) {
+      console.log(authRes);
     
-     return user
+     return authRes
     }
     
-    return null;
+    throw new UnauthorizedException('نام کاربری یا رمز عبور اشتباه است');
   }
 
   async validateToken(token: string) {
@@ -34,12 +35,12 @@ export class AuthService {
     }
   }
 
-  async register(registerDto: RegsiterDto) {
+  async register(registerDto: RegsiterDto):Promise<IAuthRes> {
     try{
-    const registeredUser = await firstValueFrom(
+    const authRes:IAuthRes = await firstValueFrom(
       this.authClient.send({ cmd: 'register' }, registerDto)
     );
-    return registeredUser;
+    return authRes;
   }catch(err){
     throw new HttpException(err.message,500)
   }
