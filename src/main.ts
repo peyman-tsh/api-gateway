@@ -2,6 +2,8 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
+import { ResponseTransformer } from './common/transformers/response.transformer';
 ;
 
 async function bootstrap() {
@@ -9,7 +11,7 @@ async function bootstrap() {
 
 
   // Global Exception Filter
-  // app.useGlobalFilters(new GlobalExceptionFilter(new ResponseTransformer()));
+  app.useGlobalFilters(new GlobalExceptionFilter(new ResponseTransformer()));
 
 
 

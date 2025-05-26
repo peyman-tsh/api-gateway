@@ -7,7 +7,6 @@ import { UseCircuitBreaker } from '../common/decorators/circuit-breaker.decorato
 import { AuthService } from './auth.service';
 import { RegsiterDto } from './dto/register.dto';
 import { ApiBody, ApiResponse } from '@nestjs/swagger';
-import { response, Response } from 'express';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { IAuthRes } from 'src/interfaces/IAuthRes';
 
@@ -30,15 +29,9 @@ export class AuthController {
      description: 'Json structure for user object',
   })
   @UseCircuitBreaker()
-  async login(@Body() loginDto: LoginDto,@Res() res:Response) {        
-    try {
+  async login(@Body() loginDto: LoginDto):Promise<IAuthRes> {        
       const response = await this.authService.login(loginDto);
-      res.status(response.status).json(response.message)
-    } catch (error) {
-      console.log(error);
-      
-      throw new HttpException(error.message, error.status || 500);
-    }
+      return response
   }
 
   @Public()
@@ -52,13 +45,10 @@ export class AuthController {
      description: 'Json structure for user object',
   })
   @UseCircuitBreaker()
-  async register(@Body() registerDto:RegsiterDto,@Res() res:Response){
-   try{
+  async register(@Body() registerDto:RegsiterDto):Promise<IAuthRes>{
      const register =await this.authService.register(registerDto);
-     res.status(register.status).json(register.message)
-   }catch(error){
-    throw new HttpException(error.message, error.status || 500);
-   }
+     return register
+   
   }
 
 }
